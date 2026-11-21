@@ -52,3 +52,5 @@ form.addEventListener("submit", async function (event) {
     button.textContent = "Get Prediction";
   }
 });
+
+document.getElementById("year").textContent = new Date().getFullYear();
