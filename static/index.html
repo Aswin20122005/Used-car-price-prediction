@@ -40,41 +40,48 @@
         <!-- Car Make -->
         <div class="form-group">
           <label for="make">Car Make</label>
-          <input type="text" id="make" name="make" placeholder="e.g., Honda" required>
-        </div>
-
-        <!-- Car Model -->
-        <div class="form-group">
-          <label for="model">Car Model</label>
-          <input type="text" id="model" name="model" placeholder="e.g., Civic" required>
+          <select id="make" name="make" required>
+            <option value="" disabled selected>Select Make</option>
+          </select>
         </div>
 
         <!-- Manufacturing Year -->
         <div class="form-group">
           <label for="year">Manufacturing Year</label>
-          <input type="number" id="year" name="year" placeholder="e.g., 2020" required>
+          <input type="number" id="year" name="year" placeholder="e.g., 2018" min="1990" max="2030" required>
         </div>
 
-        <!-- Mileage -->
+        <!-- Kilometers Driven -->
         <div class="form-group">
-          <label for="mileage">Mileage (in km)</label>
-          <input type="number" id="mileage" name="mileage" placeholder="e.g., 45000" required>
+          <label for="kilometers_driven">Kilometers Driven</label>
+          <input type="number" id="kilometers_driven" name="kilometers_driven" placeholder="e.g., 45000" min="0" required>
         </div>
 
         <!-- Fuel Type -->
         <div class="form-group">
-          <label for="fuel-type">Fuel Type</label>
-          <select id="fuel-type" name="fuel-type" required>
+          <label for="fuel_type">Fuel Type</label>
+          <select id="fuel_type" name="fuel_type" required>
             <option value="" disabled selected>Select Fuel Type</option>
             <option value="Petrol">Petrol</option>
             <option value="Diesel">Diesel</option>
+            <option value="Electric">Electric</option>
+          </select>
+        </div>
+
+        <!-- Transmission -->
+        <div class="form-group">
+          <label for="transmission">Transmission</label>
+          <select id="transmission" name="transmission" required>
+            <option value="" disabled selected>Select Transmission</option>
+            <option value="Manual">Manual</option>
+            <option value="Automatic">Automatic</option>
           </select>
         </div>
 
         <!-- Owner Type -->
         <div class="form-group">
-          <label for="owner-type">Owner Type</label>
-          <select id="owner-type" name="owner-type" required>
+          <label for="owner_type">Owner Type</label>
+          <select id="owner_type" name="owner_type" required>
             <option value="" disabled selected>Select Owner Type</option>
             <option value="First">First Owner</option>
             <option value="Second">Second Owner</option>
@@ -82,6 +89,19 @@
             <option value="Fourth & Above">Fourth & Above</option>
           </select>
         </div>
+
+        <!-- Optional technical details -->
+        <details class="form-group optional">
+          <summary>Technical details (optional, improves accuracy)</summary>
+          <label for="mileage_kmpl">Fuel Efficiency (km/l)</label>
+          <input type="number" step="0.1" id="mileage_kmpl" name="mileage_kmpl" placeholder="e.g., 18.5">
+          <label for="engine_cc">Engine (cc)</label>
+          <input type="number" id="engine_cc" name="engine_cc" placeholder="e.g., 1497">
+          <label for="power_bhp">Power (bhp)</label>
+          <input type="number" step="0.1" id="power_bhp" name="power_bhp" placeholder="e.g., 117">
+          <label for="seats">Seats</label>
+          <input type="number" id="seats" name="seats" placeholder="e.g., 5">
+        </details>
 
         <!-- Submit Button -->
         <button type="submit" class="form-button">Get Prediction</button>

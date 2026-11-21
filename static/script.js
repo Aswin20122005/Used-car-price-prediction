@@ -1,45 +1,30 @@
+const form = document.getElementById("priceForm");
+const result = document.querySelector(".prediction-result");
 
+const FIELDS = [
+  "make", "year", "kilometers_driven", "fuel_type", "transmission", "owner_type",
+  "mileage_kmpl", "engine_cc", "power_bhp", "seats",
+];
 
-document.getElementById("priceForm").addEventListener("submit", async function(event) {
+form.addEventListener("submit", async function (event) {
   event.preventDefault();
 
-  // Collect the form data
-  const make = document.getElementById("make").value;
-  const model = document.getElementById("model").value;
-  const year = document.getElementById("year").value;
-  const mileage = document.getElementById("mileage").value;
-  const fuelType = document.getElementById("fuel-type").value;
-  const ownerType = document.getElementById("owner-type").value;
-
-  // Create the JSON object to send
-  const carData = {
-      make: make,
-      model: model,
-      year: year,
-      mileage: mileage,
-      "fuel-type": fuelType,
-      "owner-type": ownerType
-  };
+  // Collect the form data (blank optional fields are sent as "" and filled in by the API)
+  const carData = {};
+  FIELDS.forEach((id) => (carData[id] = document.getElementById(id).value));
 
   try {
-      // Send the POST request to the backend
-      const response = await fetch('/predict', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(carData)
-      });
-
-      // Check for successful response
-      if (response.ok) {
-          const result = await response.json();
-          document.querySelector(".prediction-result").innerText = `Predicted Price: ₹${result.predicted_price}L`;
-      } else {
-          throw new Error('Failed to fetch prediction');
-      }
+    // Send the POST request to the backend
+    const response = await fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(carData),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Failed to fetch prediction");
+    result.innerText = `Predicted Price: ₹${data.predicted_price} Lakh`;
   } catch (error) {
-      console.error('Error:', error);
-      document.querySelector(".prediction-result").innerText = `Error: ${error.message}`;
+    console.error("Error:", error);
+    result.innerText = `Error: ${error.message}`;
   }
 });

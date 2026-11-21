@@ -371,3 +371,14 @@ body {
 .contact-card {
   width: auto;
 }
+
+/* Optional technical details section */
+.form-group.optional summary {
+  cursor: pointer;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.form-group.optional label {
+  display: block;
+  margin-top: 10px;
+}
