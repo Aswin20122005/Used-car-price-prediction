@@ -83,6 +83,25 @@ def index():
     return app.send_static_file('index.html')
 
 
+@app.route('/health')
+def health():
+    try:
+        get_bundle()
+        return jsonify({'status': 'ok'})
+    except FileNotFoundError:
+        return jsonify({'status': 'model missing'}), 503
+
+
+@app.route('/options')
+def options():
+    """Values the form's dropdowns can offer, taken from the training data."""
+    try:
+        bundle = get_bundle()
+    except FileNotFoundError:
+        return jsonify({'error': "Model not found. Run 'python train.py' first."}), 503
+    return jsonify({**bundle["categories"], 'metrics': bundle.get("metrics", {})})
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
