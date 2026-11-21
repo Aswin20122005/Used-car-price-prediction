@@ -5,7 +5,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 import pickle
 
 # Load dataset
-data = pd.read_csv('car_prices.csv')
+# The first CSV column is the row index; without index_col it became a model feature.
+data = pd.read_csv('car_prices.csv', index_col=0)
 
 # Drop rows where the target variable (Price) is missing
 data = data.dropna(subset=['Price'])
