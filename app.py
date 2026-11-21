@@ -5,8 +5,9 @@ import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing (CORS)
+# Serve the website from ./static so the page and the API share one origin.
+app = Flask(__name__, static_folder="static", static_url_path="")
+CORS(app)  # Still allow other origins to call the API
 
 MODEL_PATH = "model.joblib"
 _bundle = None
@@ -75,6 +76,11 @@ def parse_car(data, bundle):
         "Seats": _number(data, "seats", 2, 10, defaults["Seats"]),
     }
     return pd.DataFrame([row], columns=bundle["features"])
+
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 
 @app.route('/predict', methods=['POST'])
