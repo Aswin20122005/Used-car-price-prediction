@@ -22,9 +22,9 @@ data['Transmission'] = data['Transmission'].astype('category').cat.codes
 data['Owner_Type'] = data['Owner_Type'].astype('category').cat.codes
 
 # Extract numeric values from strings
-data['Mileage'] = data['Mileage'].str.extract('(\d+\.\d+|\d+)').astype(float)
-data['Engine'] = data['Engine'].str.extract('(\d+)').astype(float)
-data['Power'] = data['Power'].str.extract('(\d+\.\d+|\d+)').astype(float)
+data['Mileage'] = data['Mileage'].str.extract(r'(\d+\.\d+|\d+)').astype(float)
+data['Engine'] = data['Engine'].str.extract(r'(\d+)').astype(float)
+data['Power'] = data['Power'].str.extract(r'(\d+\.\d+|\d+)').astype(float)
 
 # Drop irrelevant columns
 data = data.drop(['Name', 'Location', 'New_Price'], axis=1)
