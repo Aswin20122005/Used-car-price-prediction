@@ -11,21 +11,23 @@ data = pd.read_csv('car_prices.csv', index_col=0)
 # Drop rows where the target variable (Price) is missing
 data = data.dropna(subset=['Price'])
 
-# Fill missing values for other columns
-data['Engine'] = data['Engine'].fillna('Unknown')
-data['Power'] = data['Power'].fillna('Unknown')
-data['Seats'] = data['Seats'].fillna(data['Seats'].mode()[0])
-data['New_Price'] = data['New_Price'].fillna('Unknown')
 
 # Convert categorical columns to numeric values (simplified encoding)
 data['Fuel_Type'] = data['Fuel_Type'].astype('category').cat.codes
 data['Transmission'] = data['Transmission'].astype('category').cat.codes
 data['Owner_Type'] = data['Owner_Type'].astype('category').cat.codes
 
-# Extract numeric values from strings
-data['Mileage'] = data['Mileage'].str.extract(r'(\d+\.\d+|\d+)').astype(float)
-data['Engine'] = data['Engine'].str.extract(r'(\d+)').astype(float)
-data['Power'] = data['Power'].str.extract(r'(\d+\.\d+|\d+)').astype(float)
+# Extract numeric values from strings ("19.67 kmpl", "1582 CC", "126.2 bhp")
+data['Mileage'] = data['Mileage'].str.extract(r'(\d+\.\d+|\d+)', expand=False).astype(float)
+data['Engine'] = data['Engine'].str.extract(r'(\d+)', expand=False).astype(float)
+data['Power'] = data['Power'].str.extract(r'(\d+\.\d+|\d+)', expand=False).astype(float)
+
+# Fill missing numbers with the median. Previously they were filled with the text
+# 'Unknown', which the regex turned back into NaN, so missing values reached the model.
+# A mileage of 0 is also a placeholder for "unknown" in this dataset.
+data.loc[data['Mileage'] == 0, 'Mileage'] = float('nan')
+for col in ['Mileage', 'Engine', 'Power', 'Seats']:
+    data[col] = data[col].fillna(data[col].median())
 
 # Drop irrelevant columns
 data = data.drop(['Name', 'Location', 'New_Price'], axis=1)
