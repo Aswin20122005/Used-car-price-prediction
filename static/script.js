@@ -27,6 +27,11 @@ form.addEventListener("submit", async function (event) {
   const carData = {};
   FIELDS.forEach((id) => (carData[id] = document.getElementById(id).value));
 
+  const button = form.querySelector("button[type=submit]");
+  button.disabled = true;
+  button.textContent = "Predicting…";
+  result.innerText = "…";
+
   try {
     // Send the POST request to the backend
     const response = await fetch("/predict", {
@@ -36,9 +41,14 @@ form.addEventListener("submit", async function (event) {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Failed to fetch prediction");
-    result.innerText = `Predicted Price: ₹${data.predicted_price} Lakh`;
+    const rupees = Math.round(data.predicted_price * 100000).toLocaleString("en-IN");
+    result.innerText = `Predicted Price: ₹${data.predicted_price} Lakh (≈ ₹${rupees})`;
+    document.getElementById("result-section").scrollIntoView({ behavior: "smooth" });
   } catch (error) {
     console.error("Error:", error);
     result.innerText = `Error: ${error.message}`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Get Prediction";
   }
 });
