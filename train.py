@@ -15,6 +15,8 @@ from sklearn.model_selection import train_test_split
 from car_price.data import CATEGORICAL_FEATURES, FEATURES, NUMERIC_FEATURES, TARGET, load_dataset
 from car_price.model import build_pipeline
 
+OPTIONAL_FEATURES = ["Mileage", "Engine", "Power", "Seats"]
+
 
 def evaluate(y_true, y_pred):
     return {
@@ -42,6 +44,11 @@ def train(data_path="car_prices.csv", n_estimators=300, test_size=0.2, random_st
         "features": FEATURES,
         # Typical values, used by the API when an optional field is left blank.
         "defaults": {c: float(X[c].median()) for c in NUMERIC_FEATURES},
+        # Per-brand typical engine/power/mileage/seats: a blank BMW shouldn't get a Maruti's engine.
+        "brand_defaults": {
+            brand: {c: float(v) for c, v in group[OPTIONAL_FEATURES].median().items() if v == v}
+            for brand, group in X.groupby("Brand")
+        },
         "categories": {c: sorted(X[c].dropna().unique().tolist()) for c in CATEGORICAL_FEATURES},
         "metrics": metrics,
     }

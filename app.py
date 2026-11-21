@@ -58,9 +58,11 @@ def parse_car(data, bundle):
     """Validate the JSON body and turn it into a one-row DataFrame for the pipeline."""
     if not isinstance(data, dict):
         raise InvalidInput("Request body must be a JSON object")
-    defaults, cats = bundle["defaults"], bundle["categories"]
+    cats = bundle["categories"]
+    brand = _brand(data.get("make"), cats["Brand"])
+    defaults = {**bundle["defaults"], **bundle.get("brand_defaults", {}).get(brand, {})}
     row = {
-        "Brand": _brand(data.get("make"), cats["Brand"]),
+        "Brand": brand,
         "Year": _number(data, "year", 1990, date.today().year),
         "Kilometers_Driven": _number(data, "kilometers_driven", 0, 1_000_000),
         "Fuel_Type": _choice(data, "fuel_type", cats["Fuel_Type"]),
