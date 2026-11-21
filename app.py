@@ -1,3 +1,4 @@
+import os
 from datetime import date
 
 import joblib
@@ -119,4 +120,5 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Debug mode exposes an interactive debugger; only enable it explicitly.
+    app.run(debug=os.environ.get('FLASK_DEBUG') == '1', port=int(os.environ.get('PORT', 5000)))
