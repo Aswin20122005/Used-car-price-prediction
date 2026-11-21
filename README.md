@@ -35,6 +35,15 @@ python app.py     # starts the site and API on http://127.0.0.1:5000
 
 Open http://127.0.0.1:5000, fill in the form, and click **Get Prediction**.
 
+### Docker
+
+```bash
+docker build -t car-price .       # trains the model during the build
+docker run -p 8000:8000 car-price # http://127.0.0.1:8000, served by gunicorn
+```
+
+For production without Docker: `gunicorn --bind 0.0.0.0:8000 --workers 2 wsgi:app`.
+
 ## API
 
 ### `POST /predict`
@@ -92,7 +101,7 @@ pytest          # data, training and API tests
 flake8 .
 ```
 
-GitHub Actions runs flake8 and the tests on every push. To run Flask in debug mode locally, set `FLASK_DEBUG=1`.
+GitHub Actions runs flake8 and the tests on every push, then builds the Docker image and smoke-tests a real prediction against it. To run Flask in debug mode locally, set `FLASK_DEBUG=1`.
 
 ## Team
 
