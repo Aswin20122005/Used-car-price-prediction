@@ -1,6 +1,20 @@
 const form = document.getElementById("priceForm");
 const result = document.querySelector(".prediction-result");
 
+// Fill the Make dropdown with the brands the model was trained on.
+async function loadOptions() {
+  try {
+    const response = await fetch("/options");
+    if (!response.ok) return;
+    const options = await response.json();
+    const make = document.getElementById("make");
+    options.Brand.forEach((brand) => make.add(new Option(brand, brand)));
+  } catch (error) {
+    console.error("Could not load options:", error);
+  }
+}
+loadOptions();
+
 const FIELDS = [
   "make", "year", "kilometers_driven", "fuel_type", "transmission", "owner_type",
   "mileage_kmpl", "engine_cc", "power_bhp", "seats",
