@@ -19,3 +19,23 @@ jobs:
         run: flake8 .
       - name: Test
         run: pytest -q
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t car-price:ci .
+      - name: Run and smoke-test
+        run: |
+          docker run -d --name app -p 8000:8000 car-price:ci
+          for i in $(seq 1 20); do curl -fs http://localhost:8000/health && break; sleep 2; done
+          curl -fs http://localhost:8000/ | grep -q priceForm
+          curl -fs -X POST http://localhost:8000/predict -H 'Content-Type: application/json' \
+            -d '{"make":"Hyundai","year":2015,"kilometers_driven":41000,"fuel_type":"Diesel","transmission":"Manual","owner_type":"First"}' \
+            | grep -q predicted_price
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8000/predict -H 'Content-Type: application/json' -d '{}')" = 400
+      - name: Logs on failure
+        if: failure()
+        run: docker logs app
