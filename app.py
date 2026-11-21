@@ -1,63 +1,94 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS   
-import pickle
-import numpy as np
+from datetime import date
+
+import joblib
+import pandas as pd
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing (CORS)
 
-# Load the trained model
-with open('model.pkl', 'rb') as f:
-    model = pickle.load(f)
+MODEL_PATH = "model.joblib"
+_bundle = None
+
+
+def get_bundle():
+    """Load the trained model once, on first use."""
+    global _bundle
+    if _bundle is None:
+        _bundle = joblib.load(MODEL_PATH)
+    return _bundle
+
+
+class InvalidInput(ValueError):
+    pass
+
+
+def _number(data, key, low, high, default=None):
+    raw = data.get(key)
+    if raw in (None, ""):
+        if default is None:
+            raise InvalidInput(f"'{key}' is required")
+        return float(default)
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        raise InvalidInput(f"'{key}' must be a number")
+    if not low <= value <= high:
+        raise InvalidInput(f"'{key}' must be between {low} and {high}")
+    return value
+
+
+def _choice(data, key, allowed):
+    value = data.get(key)
+    if value not in allowed:
+        raise InvalidInput(f"'{key}' must be one of: {', '.join(allowed)}")
+    return value
+
+
+def _brand(make, known):
+    """Match the brand case-insensitively ('bmw' -> 'BMW'); unknown brands are still accepted."""
+    make = (make or "").strip()
+    if not make:
+        raise InvalidInput("'make' is required")
+    return {b.lower(): b for b in known}.get(make.lower(), make)
+
+
+def parse_car(data, bundle):
+    """Validate the JSON body and turn it into a one-row DataFrame for the pipeline."""
+    if not isinstance(data, dict):
+        raise InvalidInput("Request body must be a JSON object")
+    defaults, cats = bundle["defaults"], bundle["categories"]
+    row = {
+        "Brand": _brand(data.get("make"), cats["Brand"]),
+        "Year": _number(data, "year", 1990, date.today().year),
+        "Kilometers_Driven": _number(data, "kilometers_driven", 0, 1_000_000),
+        "Fuel_Type": _choice(data, "fuel_type", cats["Fuel_Type"]),
+        "Transmission": _choice(data, "transmission", cats["Transmission"]),
+        "Owner_Type": _choice(data, "owner_type", cats["Owner_Type"]),
+        # Optional technical details: fall back to typical values from the training data.
+        "Mileage": _number(data, "mileage_kmpl", 1, 50, defaults["Mileage"]),
+        "Engine": _number(data, "engine_cc", 500, 7000, defaults["Engine"]),
+        "Power": _number(data, "power_bhp", 20, 700, defaults["Power"]),
+        "Seats": _number(data, "seats", 2, 10, defaults["Seats"]),
+    }
+    return pd.DataFrame([row], columns=bundle["features"])
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get the request data
-        data = request.get_json()       
-        make = data.get('make')
-        model_name = data.get('model')
-        year = int(data.get('year'))
-        mileage = float(data.get('mileage'))
-        fuel_type = data.get('fuel-type')  # Added fuel type
-        owner_type = data.get('owner-type')  # Added owner type
+        bundle = get_bundle()
+    except FileNotFoundError:
+        return jsonify({'error': "Model not found. Run 'python train.py' first."}), 503
 
-        # Feature extraction (example of how to handle the new fields)
-        # Feature array example: [year, mileage, fuel_type, owner_type, other features...]
-        
-        # Mapping categorical values to numerical for the model
-        fuel_type_map = {'Petrol': 0, 'Diesel': 1}
-        owner_type_map = {'First': 0, 'Second': 1, 'Third': 2, 'Fourth & Above': 3}
+    try:
+        car = parse_car(request.get_json(silent=True), bundle)
+    except InvalidInput as e:
+        return jsonify({'error': str(e)}), 400
 
-        # Ensure the inputs are valid
-        fuel_type_value = fuel_type_map.get(fuel_type, 0)  # Default to 0 if invalid
-        owner_type_value = owner_type_map.get(owner_type, 0)  # Default to 0 if invalid
-
-        # Define the features based on the inputs
-        features = [
-            year,          # Year of manufacture
-            mileage,       # Mileage
-            fuel_type_value,  # Fuel Type (0 for Petrol, 1 for Diesel)
-            owner_type_value,  # Owner Type (0 for First, 1 for Second, etc.)
-            0,              # Placeholder for other features (adjust according to your model)
-            15.0,           # Placeholder for other features like mileage-related values
-            1500.0,         # Placeholder for engine size or similar features
-            90.0,           # Placeholder for power (e.g., engine power in horsepower)
-            5,              # Placeholder for number of seats
-            0.0             # Placeholder for other car-related features
-        ]
-
-        # Convert to numpy array for model prediction
-        inputs = np.array([features])
-        
-        # Get the prediction from the model
-        prediction = model.predict(inputs)
-        
-        # Return the predicted price as a JSON response
-        return jsonify({'predicted_price': round(prediction[0], 2)})
-
-    except Exception as e:
-        return jsonify({'error': f"Failed to fetch prediction: {str(e)}"}), 500
+    price = float(bundle["pipeline"].predict(car)[0])
+    return jsonify({'predicted_price': round(price, 2), 'unit': 'lakh INR'})
 
 
 if __name__ == '__main__':
