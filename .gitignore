@@ -1,0 +1,18 @@
+# Trained model artifacts (rebuild with `python model_creation.py`)
+model.pkl
+model.joblib
+metrics.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
